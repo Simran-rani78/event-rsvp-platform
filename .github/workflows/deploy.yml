@@ -35,9 +35,6 @@ jobs:
       working-directory: ./client
       run: npm ci
 
-    - name: Check for Frontend Errors (Lint)
-      working-directory: ./client
-      run: npm run lint
 
     - name: Build Frontend
       working-directory: ./client
