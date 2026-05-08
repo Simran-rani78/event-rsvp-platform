@@ -54,7 +54,7 @@ jobs:
     # 5. Docker Build Test (Integration Check)
     # This verifies that our Dockerfiles are valid and the containers can build successfully
     - name: Verify Docker Containers Build
-      run: docker-compose build
+      run: docker compose build
 
     # 6. Deployment (Placeholder)
     # In a real deployment scenario, you would push the Docker images to a registry 
