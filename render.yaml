@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: rsvp-backend
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.x
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false # Set this manually in Render dashboard
+      - key: FRONTEND_URL
+        sync: false # Set this manually in Render dashboard (e.g. your Vercel URL)

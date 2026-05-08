@@ -1,0 +1,69 @@
+name: MERN CI/CD Pipeline
+
+on:
+  # Trigger the workflow on push or pull request events for the main branch
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20.x] # Using Node 20 as set in our Dockerfiles
+
+    steps:
+    # 1. Check out the repository code
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # 2. Set up Node.js environment
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: |
+          client/package-lock.json
+          server/package-lock.json
+
+    # 3. Frontend: Install dependencies, lint, and build
+    - name: Install Frontend Dependencies
+      working-directory: ./client
+      run: npm ci
+
+    - name: Check for Frontend Errors (Lint)
+      working-directory: ./client
+      run: npm run lint
+
+    - name: Build Frontend
+      working-directory: ./client
+      run: npm run build
+      env:
+        # Provide a dummy API URL so Vite builds successfully
+        VITE_API_URL: http://localhost:5000/api
+
+    # 4. Backend: Install dependencies
+    - name: Install Backend Dependencies
+      working-directory: ./server
+      run: npm ci
+    
+    # Note: Since the backend is a standard Node.js Express app without TypeScript, 
+    # there is no compilation "build" step needed. Installing dependencies verifies it's intact.
+
+    # 5. Docker Build Test (Integration Check)
+    # This verifies that our Dockerfiles are valid and the containers can build successfully
+    - name: Verify Docker Containers Build
+      run: docker-compose build
+
+    # 6. Deployment (Placeholder)
+    # In a real deployment scenario, you would push the Docker images to a registry 
+    # (like Docker Hub or AWS ECR) or SSH into a server to pull the latest code.
+    - name: Deploy
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        echo "This is where the deployment logic goes!"
+        echo "For example: syncing files to AWS S3, or triggering a Webhook to restart a server."

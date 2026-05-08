@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # MongoDB Database Service
+  mongodb:
+    image: mongo:6 # Use official MongoDB image
+    container_name: rsvp_mongodb
+    ports:
+      - "27017:27017" # Map host port to container port
+    volumes:
+      - mongodb_data:/data/db # Persist database data even if container restarts
+    networks:
+      - rsvp_network
+
+  # Express Backend Service
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: rsvp_backend
+    ports:
+      - "5000:5000"
+    environment:
+      # Use the docker internal network name 'mongodb' instead of localhost
+      - MONGO_URI=mongodb://mongodb:27017/eventhub
+      - PORT=5000
+      - FRONTEND_URL=http://localhost:5173
+    depends_on:
+      - mongodb # Ensure db starts before backend
+    networks:
+      - rsvp_network
+
+  # React/Vite Frontend Service
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        # Pass the backend URL to Vite during the build step
+        - VITE_API_URL=http://localhost:5000/api
+    container_name: rsvp_frontend
+    ports:
+      # Map host port 5173 to Nginx port 80
+      - "5173:80"
+    depends_on:
+      - backend # Ensure backend starts before frontend
+    networks:
+      - rsvp_network
+
+# Define persistent volumes
+volumes:
+  mongodb_data:
+
+# Define a custom network so containers can communicate using service names
+networks:
+  rsvp_network:
+    driver: bridge
